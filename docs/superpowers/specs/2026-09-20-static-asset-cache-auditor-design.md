@@ -44,7 +44,12 @@ an injected clock. CLI usage/configuration errors exit 2 with empty stdout;
 unreadable/invalid/over-limit input exits 2 with an incomplete JSON report;
 complete pass/fail exit 0/1. The CLI enforces byte, asset-count, JSON-depth
 and cooperative time bounds, each with N and N+1 tests. `--help` documents all
-flags and exits; a human summary goes to stderr. Runnable clean and failing
+flags and exits; a human summary goes to stderr. Optional `--report FILE`
+writes byte-identical JSON under `--root` only after the catalog write guard
+refuses a destination symlink, escaping parent, input hard link and dangling
+named-input symlink (including multiple hops). Safe new and existing regular
+files work. A write refusal emits an incomplete report at exit 2 without a
+success claim; malformed CLI configuration still leaves stdout empty. Runnable clean and failing
 examples contain only synthetic domains, assets and header values. Tests must
 show a mutable URL with long immutable policy failing and an explicitly
 declared hashed immutable asset passing, with rule-level fail-on-removal proof.
