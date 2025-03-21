@@ -1,13 +1,20 @@
 {
   "name": "static-asset-cache-auditor",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Check cache headers, immutable assets and invalidation behavior.",
   "type": "module",
+  "bin": {
+    "static-asset-cache-auditor": "./bin/static-asset-cache-auditor.mjs"
+  },
   "engines": {
     "node": ">=22"
   },
   "scripts": {
-    "test": "node --test"
+    "lint": "node --check src/index.mjs && node --check src/report.mjs && node --check src/json.mjs && node --check src/write-guard.mjs && node --check bin/static-asset-cache-auditor.mjs",
+    "test": "node --test",
+    "example": "node bin/static-asset-cache-auditor.mjs --input examples/clean.json",
+    "example:fail": "node bin/static-asset-cache-auditor.mjs --input examples/mutable-immutable-error.json; test $? -eq 1",
+    "check": "npm run lint && npm test && npm run example && npm run example:fail"
   },
   "license": "MIT",
   "repository": {
