@@ -115,6 +115,24 @@ test('invalid JSON and duplicate keys cannot pass or leak document text', async 
   assert.deepEqual(rules(JSON.parse(duplicate.stdout)), ['input-invalid'])
 })
 
+test('rounded fractional policy lexemes cannot become integer cache limits', async (t) => {
+  const space = await workspace(t)
+  const original = JSON.stringify(cleanDocument())
+  for (const field of ['mutableMaxAgeSeconds', 'immutableMinAgeSeconds']) {
+    const value = field === 'mutableMaxAgeSeconds' ? '3600' : '31536000'
+    const exact = original.replace(`"${field}":${value}`, `"${field}":${value}.0`)
+    assert.notEqual(exact, original)
+    await writeFile(space.input, exact)
+    assert.equal(cli(args(space)).code, 0, `exact decimal spelling of ${field}`)
+    const rounded = original.replace(`"${field}":${value}`, `"${field}":${value}.00000000000000001`)
+    assert.notEqual(rounded, original)
+    await writeFile(space.input, rounded)
+    const result = cli(args(space))
+    assert.equal(result.code, 2, field)
+    assert.equal(JSON.parse(result.stdout).status, 'incomplete')
+  }
+})
+
 test('invalid UTF-8 is incomplete rather than repaired', async (t) => {
   const space = await workspace(t)
   await writeFile(space.input, Buffer.from([0x7b, 0x22, 0x61, 0x22, 0x3a, 0x80, 0x7d]))

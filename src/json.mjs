@@ -2,6 +2,32 @@ export class JsonInputError extends Error {
   constructor(message) { super(message); this.name = 'JsonInputError' }
 }
 
+function canonicalDecimal(token) {
+  const match = /^(-?)(\d+)(?:\.(\d+))?(?:[eE]([+-]?)(\d+))?$/.exec(token)
+  if (!match) throw new JsonInputError('JSON number cannot be interpreted exactly.')
+  const fractional = match[3] ?? ''
+  let digits = `${match[2]}${fractional}`.replace(/^0+/, '')
+  if (digits === '') return match[1] === '-' ? '-0' : '0'
+  const exponentDigits = (match[5] ?? '0').replace(/^0+/, '') || '0'
+  const largest = String(token.length + 324)
+  if (exponentDigits.length > largest.length
+      || (exponentDigits.length === largest.length && exponentDigits > largest)) {
+    throw new JsonInputError('JSON number cannot be interpreted exactly.')
+  }
+  let exponent = BigInt(exponentDigits) * (match[4] === '-' ? -1n : 1n) - BigInt(fractional.length)
+  const trailing = digits.match(/0+$/)?.[0].length ?? 0
+  digits = digits.slice(0, digits.length - trailing)
+  exponent += BigInt(trailing)
+  return `${match[1]}${digits}e${exponent}`
+}
+
+function assertNumericPrecision(token) {
+  const value = Number(token)
+  if (!Number.isFinite(value) || canonicalDecimal(token) !== canonicalDecimal(value.toString())) {
+    throw new JsonInputError('JSON number loses precision.')
+  }
+}
+
 // JSON.parse establishes syntax; this scanner preserves member-key evidence
 // that JSON.parse would otherwise overwrite and checks structural depth.
 export function parseStrictJson(text, maxDepth) {
@@ -53,7 +79,10 @@ export function parseStrictJson(text, maxDepth) {
       at += 1
       continue
     }
+    const start = at
     while (at < text.length && !/[\s,}\]]/.test(text[at])) at += 1
+    const token = text.slice(start, at)
+    if (/^-?[0-9]/.test(token)) assertNumericPrecision(token)
     consumeValue()
   }
   return value

@@ -106,8 +106,10 @@ options are rejected:
 
 At the exact limit, evidence is evaluated; one beyond makes the report
 incomplete. The analysis clock is injectable in the library, so tests do not
-depend on wall time. Duplicate JSON object keys and invalid UTF-8 are rejected
-without echoing the document or parser's quoted snippet.
+depend on wall time. Duplicate JSON object keys, numeric lexemes that lose
+precision when parsed, and invalid UTF-8 are rejected without echoing the
+document or parser's quoted snippet. Exact decimal spellings of an integer,
+such as `3600.0`, remain usable.
 
 | Exit | stdout | Meaning |
 | ---: | --- | --- |
