@@ -56,9 +56,15 @@ function captureHeaders(headers) {
   if (directives.has('no-store') && (directives.has('immutable')
     || directives.has('max-age') || directives.has('s-maxage'))) return { rule: 'header-ambiguous' }
   if (directives.has('public') && directives.has('private')) return { rule: 'header-ambiguous' }
-  const validator = names.get('etag') ?? names.get('last-modified')
-  if (validator !== undefined && !visible(validator)) return { rule: 'header-invalid' }
-  return { directives, validator: validator !== undefined }
+  const etag = names.get('etag')
+  const modified = names.get('last-modified')
+  // An arbitrary visible string is not an ETag. The opaque tag must be quoted
+  // (optionally weak) and cannot contain a control byte or an unescaped quote.
+  if (etag !== undefined && !/^(?:W\/)?"[\u0021\u0023-\u007e\u0080-\u00ff]*"$/.test(etag)) {
+    return { rule: 'header-invalid' }
+  }
+  if (modified !== undefined && !visible(modified)) return { rule: 'header-invalid' }
+  return { directives, validator: etag !== undefined || modified !== undefined }
 }
 
 export function auditAssetCache(document, { limits: overrides, now = Date.now, file = 'input.json' } = {}) {

@@ -133,6 +133,18 @@ test('rounded fractional policy lexemes cannot become integer cache limits', asy
   }
 })
 
+test('escaped control bytes in an ETag are incomplete through the CLI', async (t) => {
+  const space = await workspace(t)
+  const document = cleanDocument()
+  assert.equal(cli(args(space)).code, 0)
+  document.captures[1].headers[1].value = '"v1"\u0001'
+  await writeFile(space.input, JSON.stringify(document))
+  const result = cli(args(space))
+  assert.equal(result.code, 2)
+  assert.deepEqual(rules(JSON.parse(result.stdout)), ['header-invalid'])
+  assert.equal(result.stdout.includes(String.fromCodePoint(1)), false)
+})
+
 test('invalid UTF-8 is incomplete rather than repaired', async (t) => {
   const space = await workspace(t)
   await writeFile(space.input, Buffer.from([0x7b, 0x22, 0x61, 0x22, 0x3a, 0x80, 0x7d]))

@@ -274,6 +274,20 @@ test('a rendered-empty validator is not usable evidence', () => {
   assert.deepEqual(rules(report), ['header-invalid'])
 })
 
+test('only a syntactically valid quoted ETag can establish mutable revalidation', () => {
+  const document = cleanDocument()
+  for (const value of ['"v1"', 'W/"v1"']) {
+    document.captures[1].headers[1].value = value
+    assert.equal(auditAssetCache(document).status, 'pass', value)
+  }
+  for (const value of ['not-an-etag', '"v1"\u0001']) {
+    document.captures[1].headers[1].value = value
+    const report = auditAssetCache(document)
+    assert.equal(report.status, 'incomplete', value)
+    assert.deepEqual(rules(report), ['header-invalid'])
+  }
+})
+
 test('unsafe manifest identifiers are incomplete and do not reach output', () => {
   const document = cleanDocument()
   document.manifest[1].id = '\u202e'

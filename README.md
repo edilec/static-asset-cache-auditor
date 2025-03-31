@@ -64,8 +64,10 @@ max-age at least immutableMinAgeSeconds. If s-maxage is supplied for an
 immutable asset, it must also meet that minimum. A mutable asset must not declare
 immutable. Without no-cache or no-store, max-age must be present and both it
 and s-maxage, if present, must not exceed mutableMaxAgeSeconds. s-maxage alone
-does not establish a browser TTL bound. A cacheable mutable asset needs ETag or
-Last-Modified to revalidate; no-cache with a validator is safe even alongside
+does not establish a browser TTL bound. A cacheable mutable asset needs a
+syntactically valid quoted ETag (optionally `W/` prefixed) or a visible
+Last-Modified value to revalidate; a bare or control-bearing ETag is unknown
+evidence, not a validator. no-cache with a validator is safe even alongside
 a long numeric max-age because it requires revalidation. no-store is valid
 without a validator. Malformed or unsupported
 cache directives, including contradictory no-cache and immutable, make the
