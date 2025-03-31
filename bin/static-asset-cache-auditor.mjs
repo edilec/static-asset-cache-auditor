@@ -100,7 +100,10 @@ async function main() {
   }
   if (options.help) { process.stdout.write(HELP); return }
   let root
-  try { root = await realpath(resolve(options.root)) }
+  try {
+    root = await realpath(resolve(options.root))
+    if (!(await stat(root)).isDirectory()) throw new ConfigError('--root is not a directory')
+  }
   catch {
     process.stderr.write(`${TOOL_ID}: --root must name an existing directory.\n`)
     process.exitCode = 2

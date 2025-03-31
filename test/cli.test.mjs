@@ -90,6 +90,15 @@ test('a nonexistent root is invalid configuration with empty stdout', async (t) 
   assert.match(result.stderr, /--root/)
 })
 
+test('a regular file cannot be the declared root even when it is the input', async (t) => {
+  const space = await workspace(t)
+  assert.equal(cli(args(space)).code, 0)
+  const result = cli(['--input', space.input, '--root', space.input])
+  assert.equal(result.code, 2)
+  assert.equal(result.stdout, '')
+  assert.match(result.stderr, /--root/)
+})
+
 test('an unreadable input exits 2 with an incomplete report', async (t) => {
   const space = await workspace(t)
   const result = cli(['--input', join(space.base, 'missing.json'), '--root', space.base])
