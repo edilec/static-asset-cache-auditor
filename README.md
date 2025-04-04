@@ -89,7 +89,11 @@ Cache-Control in a complete capture is a known failure.
 | report-write-refused | error, incomplete | Optional output could not be written safely. |
 
 Every finding carries a relative file label and a JSON pointer, never a raw
-URL, header value, credential or absolute host path. Findings sort by UTF-16
+URL, header value, credential or absolute host path. Prohibited control and
+invisible code points in a file label are spelled as `\\u{hhhh}` and literal
+backslashes are doubled, so distinct short paths do not collapse in reports.
+The label uses the canonical input path when the named path is a symlink.
+Findings sort by UTF-16
 code unit, first file, then pointer, then rule id. Identical inputs and options
 produce byte-identical output.
 

@@ -40,10 +40,14 @@ test('unknown limit names and non-positive bounds are configuration errors', () 
   assert.equal(validateLimits({ maxAssets: 2 }).maxAssets, 2)
 })
 
-test('C1, bidi and default-ignorable marks cannot hide inside a report location', () => {
+test('C1, bidi and default-ignorable marks have lossless safe location spellings', () => {
   const report = makeReport([makeFinding('input-invalid', 'a\u0085\u202e\u034fb.json')], 0)
-  assert.equal(report.findings[0].location.file, 'ab.json')
+  assert.equal(report.findings[0].location.file, 'a\\u{0085}\\u{202e}\\u{034f}b.json')
   assert.equal(JSON.stringify(report).includes('\u0085'), false)
   assert.equal(JSON.stringify(report).includes('\u202e'), false)
   assert.equal(JSON.stringify(report).includes('\u034f'), false)
+  const ordinary = makeFinding('input-invalid', 'ab.json')
+  const literalEscape = makeFinding('input-invalid', 'a\\u{0085}b.json')
+  assert.notEqual(report.findings[0].location.file, ordinary.location.file)
+  assert.notEqual(makeFinding('input-invalid', 'a\u0085b.json').location.file, literalEscape.location.file)
 })

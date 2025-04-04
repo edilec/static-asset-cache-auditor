@@ -58,8 +58,11 @@ function parseArgs(argv) {
 }
 
 const inside = (path, root) => path === root || path.startsWith(root + sep)
-const safeFile = (named, root) => {
-  const path = relative(root, named)
+const safeFile = async (named, root) => {
+  let canonical
+  try { canonical = await realpath(named) }
+  catch { canonical = named }
+  const path = relative(root, canonical)
   if (path === '' || path === '..' || path.startsWith('..' + sep) || isAbsolute(path)) return 'input.json'
   return path
 }
@@ -109,7 +112,7 @@ async function main() {
     process.exitCode = 2
     return
   }
-  const file = safeFile(resolve(options.input), root)
+  const file = await safeFile(resolve(options.input), root)
   let report = await inspectInput(options, root, file)
   if (options.report !== undefined) {
     try {

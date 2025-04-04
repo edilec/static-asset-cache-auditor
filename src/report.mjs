@@ -42,8 +42,18 @@ export class ConfigError extends Error {
 }
 
 const byCodeUnit = (a, b) => a === b ? 0 : a < b ? -1 : 1
-const safe = (value) => (typeof value === 'string' ? value : '')
-  .replace(/[\p{Default_Ignorable_Code_Point}\u0000-\u001f\u007f-\u009f\u2028\u2029]/gu, '').slice(0, 160)
+const safe = (value) => {
+  let rendered = ''
+  for (const character of typeof value === 'string' ? value : '') {
+    const spelling = character === '\\' ? '\\\\'
+      : /[\p{Default_Ignorable_Code_Point}\u0000-\u001f\u007f-\u009f\u2028\u2029]/u.test(character)
+        ? `\\u{${character.codePointAt(0).toString(16).padStart(4, '0')}}`
+        : character
+    if (rendered.length + spelling.length > 160) break
+    rendered += spelling
+  }
+  return rendered
+}
 
 export function validateLimits(overrides = {}) {
   if (overrides === null || Array.isArray(overrides) || typeof overrides !== 'object') {

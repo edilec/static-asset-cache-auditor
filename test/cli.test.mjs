@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
-import { link, mkdir, mkdtemp, readFile, rm, symlink, writeFile } from 'node:fs/promises'
+import { link, mkdir, mkdtemp, readFile, realpath, rm, symlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
@@ -97,6 +97,38 @@ test('a regular file cannot be the declared root even when it is the input', asy
   assert.equal(result.code, 2)
   assert.equal(result.stdout, '')
   assert.match(result.stderr, /--root/)
+})
+
+test('distinct C1-bearing and plain filenames keep distinct safe report locations', async (t) => {
+  const space = await workspace(t)
+  const canonical = await realpath(space.base)
+  const document = cleanDocument()
+  document.captures[1].headers[0].value = 'max-age=31536000, immutable'
+  const ordinary = join(canonical, 'dirty.json')
+  const marked = join(canonical, `dirty${String.fromCodePoint(0x85)}.json`)
+  await writeFile(ordinary, JSON.stringify(document))
+  await writeFile(marked, JSON.stringify(document))
+  const plainReport = JSON.parse(cli(['--input', ordinary, '--root', canonical]).stdout)
+  const markedResult = cli(['--input', marked, '--root', canonical])
+  const markedReport = JSON.parse(markedResult.stdout)
+  assert.equal(markedResult.code, 1)
+  assert.equal(plainReport.findings[0].location.file, 'dirty.json')
+  assert.equal(markedReport.findings[0].location.file, 'dirty\\u{0085}.json')
+  assert.notEqual(markedReport.findings[0].location.file, plainReport.findings[0].location.file)
+  assert.equal(markedResult.stdout.includes(String.fromCodePoint(0x85)), false)
+})
+
+test('a symlinked spelling of the root does not lose the input location', async (t) => {
+  const space = await workspace(t)
+  const canonical = await realpath(space.base)
+  const document = cleanDocument()
+  document.captures[1].headers[0].value = 'max-age=31536000, immutable'
+  await writeFile(space.input, JSON.stringify(document))
+  const alias = join(canonical, 'alias')
+  await symlink('.', alias)
+  const result = cli(['--root', alias, '--input', join(alias, 'input.json')])
+  assert.equal(result.code, 1)
+  assert.equal(JSON.parse(result.stdout).findings[0].location.file, 'input.json')
 })
 
 test('an unreadable input exits 2 with an incomplete report', async (t) => {
