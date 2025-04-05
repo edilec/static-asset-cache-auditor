@@ -355,3 +355,11 @@ test('time budget is allowed at N and incomplete at N+1', () => {
   assert.equal(report.status, 'incomplete')
   assert.deepEqual(rules(report), ['analysis-timeout'])
 })
+
+test('a backward injected clock never yields a clean cache audit', () => {
+  let reads = 0
+  const report = auditAssetCache(cleanDocument(), { now: () => reads++ === 0 ? 10 : 9 })
+  assert.equal(report.status, 'incomplete')
+  assert.deepEqual(rules(report), ['analysis-timeout'])
+  assert.equal(auditAssetCache(cleanDocument(), { now: () => 10 }).status, 'pass')
+})

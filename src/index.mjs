@@ -76,6 +76,7 @@ export function auditAssetCache(document, { limits: overrides, now = Date.now, f
   const checkpoint = () => {
     const current = now()
     if (!Number.isFinite(current)) throw new ConfigError('now must return a finite number')
+    if (current < started) throw new DeadlineError()
     if (current - started > limits.timeoutMs) throw new DeadlineError()
   }
   const findings = []
