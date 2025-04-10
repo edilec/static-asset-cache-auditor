@@ -57,7 +57,7 @@ function parseArgs(argv) {
   return options
 }
 
-const inside = (path, root) => path === root || path.startsWith(root + sep)
+const inside = (path, root) => path === root || path.startsWith(root.endsWith(sep) ? root : root + sep)
 const safeFile = async (named, root) => {
   let canonical
   try { canonical = await realpath(named) }

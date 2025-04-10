@@ -48,7 +48,7 @@ export async function assertWritableDestination(destination, { inputs = [], root
     let base
     try { base = await realpath(resolve(root)) }
     catch { throw new DestinationError(`${label} root directory does not exist.`) }
-    if (parent !== base && !parent.startsWith(base + sep)) {
+    if (parent !== base && !parent.startsWith(base.endsWith(sep) ? base : base + sep)) {
       throw new DestinationError(`${label} resolves outside the declared root.`)
     }
   }

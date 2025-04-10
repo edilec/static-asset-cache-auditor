@@ -99,6 +99,19 @@ test('a regular file cannot be the declared root even when it is the input', asy
   assert.match(result.stderr, /--root/)
 })
 
+test('the filesystem root admits an absolute saved input and safe report', async (t) => {
+  const space = await workspace(t)
+  const canonical = await realpath(space.base)
+  const input = join(canonical, 'input.json')
+  const output = join(canonical, 'report.json')
+  const baseline = cli(['--root', canonical, '--input', input])
+  assert.equal(baseline.code, 0)
+  const result = cli(['--root', '/', '--input', input, '--report', output])
+  assert.equal(result.code, 0)
+  assert.equal(JSON.parse(result.stdout).status, 'pass')
+  assert.equal(await readFile(output, 'utf8'), result.stdout)
+})
+
 test('distinct C1-bearing and plain filenames keep distinct safe report locations', async (t) => {
   const space = await workspace(t)
   const canonical = await realpath(space.base)
