@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "1",
+  "policy": { "mutableMaxAgeSeconds": 3600, "immutableMinAgeSeconds": 31536000 },
+  "manifest": [
+    { "id": "app-js", "url": "https://assets.example.test/app.abcdef12.js", "kind": "immutable" },
+    { "id": "index-js", "url": "https://assets.example.test/index.js", "kind": "mutable" }
+  ],
+  "captures": [
+    {
+      "url": "https://assets.example.test/app.abcdef12.js",
+      "headers": [{ "name": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
+    },
+    {
+      "url": "https://assets.example.test/index.js",
+      "headers": [
+        { "name": "Cache-Control", "value": "public, max-age=3600" },
+        { "name": "ETag", "value": "\"v1\"" }
+      ]
+    }
+  ]
+}
